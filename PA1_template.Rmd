@@ -49,14 +49,14 @@ dataSet <- read.csv(dataFile)
 # Preprocessing: 
 # -convert date column to date class
 dataSet$date <- as.Date(dataSet$date)
-#dataSet$interval <- as.factor(dataSet$interval)
+
 ```
 ### What is mean total number of steps taken per day?
 
 ***1. Calculate the total number of steps taken per day***
 
 ```{r 1-1 Getting totalStepsPerDay,echo=TRUE}
-  totalStepsPerDay <- aggregate(dataSet$steps,by=list(dataSet$date),sum,na.rm=TRUE)
+  totalStepsPerDay <- aggregate(dataSet$steps,by=list(dataSet$date),sum)
 
   # give descriptive column names 
   names(totalStepsPerDay) <- c("date","total_steps")
@@ -74,8 +74,8 @@ hist(totalStepsPerDay$total_steps,ylim=c(0,40),col=rgb(1,0,0,1),density=30,main=
 ***3. Mean & median of the total number of steps taken per day***
 
 ```{r 1-2b Finding the mean and median of total number of steps per day, echo=TRUE}
-  totalStepsPerDay.mean <- mean(totalStepsPerDay$total_steps)
-  totalStepsPerDay.median <- median(totalStepsPerDay$total_steps)
+  totalStepsPerDay.mean <- mean(totalStepsPerDay$total_steps,na.rm=TRUE)
+  totalStepsPerDay.median <- median(totalStepsPerDay$total_steps,na.rm=TRUE)
 ```
 
 - Mean of the total number of steps taken per day: ***```r totalStepsPerDay.mean```***
@@ -135,9 +135,6 @@ mean/median for that day, or the mean for that 5-minute interval, etc.***
 -  We can use the same values of mean steps per interval, as calculated
   earlier in dailyActivity to replace the NA step values corresponding
   to the interval column. 
-  
--  The values used are rounded down (floor) to the nearest integer, 
-  because in reality there are no partial steps.
 
 ***3. Create a new dataset that is equal to the original dataset but with the missing data filled in.***
 
@@ -149,7 +146,7 @@ mean/median for that day, or the mean for that 5-minute interval, etc.***
   for (i in dataSet2.idx_na) {
     interval <- dataSet2[i,c("interval")]
     val <- dailyActivity[dailyActivity$interval==interval,c("steps")]
-    dataSet2[i,c("steps")] <- floor(val)
+    dataSet2[i,c("steps")] <- val
   }
 ```
 
@@ -198,7 +195,9 @@ knitr::kable(comparison)
 ***What is the impact of imputing missing data on the
 estimates of the total daily number of steps?***
 
-In the first estimate, specifiying na.rm=TRUE in the aggregate() function resulted in the total steps taken in the affected days to be treated as 0. After imputation, these values were given by the average number of steps taken over all days. So after imputation we get a more normal distribution of values, with 14.9% greater mean value and 2.4% greater median value. 
+In the first estimate, missing values were filtered out. After imputation, these values were given by the average number of steps taken over all days, which means that the new values are exactly the population mean. The mean value before and after imputation is exactly the same. In other words, the imputation did not introduce any significant bias.
+
+The median value also shifted only very slightly, because the additional values are the mean of the population.
 
 ### Are there differences in activity patterns between weekdays and weekends?
 

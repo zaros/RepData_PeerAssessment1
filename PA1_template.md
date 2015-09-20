@@ -50,7 +50,6 @@ dataSet <- read.csv(dataFile)
 # Preprocessing: 
 # -convert date column to date class
 dataSet$date <- as.Date(dataSet$date)
-#dataSet$interval <- as.factor(dataSet$interval)
 ```
 ### What is mean total number of steps taken per day?
 
@@ -58,7 +57,7 @@ dataSet$date <- as.Date(dataSet$date)
 
 
 ```r
-  totalStepsPerDay <- aggregate(dataSet$steps,by=list(dataSet$date),sum,na.rm=TRUE)
+  totalStepsPerDay <- aggregate(dataSet$steps,by=list(dataSet$date),sum)
 
   # give descriptive column names 
   names(totalStepsPerDay) <- c("date","total_steps")
@@ -71,14 +70,14 @@ dataSet$date <- as.Date(dataSet$date)
 
 |date       | total_steps|
 |:----------|-----------:|
-|2012-10-01 |           0|
+|2012-10-01 |          NA|
 |2012-10-02 |         126|
 |2012-10-03 |       11352|
 |2012-10-04 |       12116|
 |2012-10-05 |       13294|
 |2012-10-06 |       15420|
 |2012-10-07 |       11015|
-|2012-10-08 |           0|
+|2012-10-08 |          NA|
 |2012-10-09 |       12811|
 |2012-10-10 |        9900|
 |2012-10-11 |       10304|
@@ -102,20 +101,20 @@ dataSet$date <- as.Date(dataSet$date)
 |2012-10-29 |        5018|
 |2012-10-30 |        9819|
 |2012-10-31 |       15414|
-|2012-11-01 |           0|
+|2012-11-01 |          NA|
 |2012-11-02 |       10600|
 |2012-11-03 |       10571|
-|2012-11-04 |           0|
+|2012-11-04 |          NA|
 |2012-11-05 |       10439|
 |2012-11-06 |        8334|
 |2012-11-07 |       12883|
 |2012-11-08 |        3219|
-|2012-11-09 |           0|
-|2012-11-10 |           0|
+|2012-11-09 |          NA|
+|2012-11-10 |          NA|
 |2012-11-11 |       12608|
 |2012-11-12 |       10765|
 |2012-11-13 |        7336|
-|2012-11-14 |           0|
+|2012-11-14 |          NA|
 |2012-11-15 |          41|
 |2012-11-16 |        5441|
 |2012-11-17 |       14339|
@@ -131,7 +130,7 @@ dataSet$date <- as.Date(dataSet$date)
 |2012-11-27 |       13646|
 |2012-11-28 |       10183|
 |2012-11-29 |        7047|
-|2012-11-30 |           0|
+|2012-11-30 |          NA|
 
 ***2. Make a histogram of the total number of steps taken per day***
 
@@ -146,12 +145,12 @@ hist(totalStepsPerDay$total_steps,ylim=c(0,40),col=rgb(1,0,0,1),density=30,main=
 
 
 ```r
-  totalStepsPerDay.mean <- mean(totalStepsPerDay$total_steps)
-  totalStepsPerDay.median <- median(totalStepsPerDay$total_steps)
+  totalStepsPerDay.mean <- mean(totalStepsPerDay$total_steps,na.rm=TRUE)
+  totalStepsPerDay.median <- median(totalStepsPerDay$total_steps,na.rm=TRUE)
 ```
 
-- Mean of the total number of steps taken per day: ***``9354.2295082``***
-- Median of the total number of steps taken per day: ***``10395``***
+- Mean of the total number of steps taken per day: ***``10766.1886792``***
+- Median of the total number of steps taken per day: ***``10765``***
 
 ### What is the average daily activity pattern?
 
@@ -220,9 +219,6 @@ mean/median for that day, or the mean for that 5-minute interval, etc.***
 -  We can use the same values of mean steps per interval, as calculated
   earlier in dailyActivity to replace the NA step values corresponding
   to the interval column. 
-  
--  The values used are rounded down (floor) to the nearest integer, 
-  because in reality there are no partial steps.
 
 ***3. Create a new dataset that is equal to the original dataset but with the missing data filled in.***
 
@@ -235,7 +231,7 @@ mean/median for that day, or the mean for that 5-minute interval, etc.***
   for (i in dataSet2.idx_na) {
     interval <- dataSet2[i,c("interval")]
     val <- dailyActivity[dailyActivity$interval==interval,c("steps")]
-    dataSet2[i,c("steps")] <- floor(val)
+    dataSet2[i,c("steps")] <- val
   }
 ```
 
@@ -257,8 +253,8 @@ totalStepsPerDay2.mean <- mean(totalStepsPerDay2$total_steps)
 totalStepsPerDay2.median <- median(totalStepsPerDay2$total_steps)
 ```
 
-- Mean of the total number of steps taken per day (imputed): ***``10749.7704918``***
-- Median of the total number of steps taken per day (imputed): ***``10641``***
+- Mean of the total number of steps taken per day (imputed): ***``10766.1886792``***
+- Median of the total number of steps taken per day (imputed): ***``10766.1886792``***
 
 ***Do these values differ from the estimates from the first part
 of the assignment?*** 
@@ -294,13 +290,15 @@ knitr::kable(comparison)
 
 |       | original|  imputed|    delta| delta_pct|
 |:------|--------:|--------:|--------:|---------:|
-|mean   |  9354.23| 10749.77| 1395.541| 14.918823|
-|median | 10395.00| 10641.00|  246.000|  2.366522|
+|mean   | 10766.19| 10766.19| 0.000000| 0.0000000|
+|median | 10765.00| 10766.19| 1.188679| 0.0110421|
 
 ***What is the impact of imputing missing data on the
 estimates of the total daily number of steps?***
 
-In the first estimate, specifiying na.rm=TRUE in the aggregate() function resulted in the total steps taken in the affected days to be treated as 0. After imputation, these values were given by the average number of steps taken over all days. So after imputation we get a more normal distribution of values, with 14.9% greater mean value and 2.4% greater median value. 
+In the first estimate, missing values were filtered out. After imputation, these values were given by the average number of steps taken over all days, which means that the new values are exactly the population mean. The mean value before and after imputation is exactly the same. In other words, the imputation did not introduce any significant bias.
+
+The median value also shifted only very slightly, because the additional values are the mean of the population.
 
 ### Are there differences in activity patterns between weekdays and weekends?
 
@@ -328,7 +326,7 @@ This provides us with a data frame that has the following structure
 
 ```
 ## 'data.frame':	17568 obs. of  4 variables:
-##  $ steps   : num  1 0 0 0 0 2 0 0 0 1 ...
+##  $ steps   : num  1.717 0.3396 0.1321 0.1509 0.0755 ...
 ##  $ date    : Date, format: "2012-10-01" "2012-10-01" ...
 ##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
 ##  $ dayType : Factor w/ 2 levels "weekend","weekday": 2 2 2 2 2 2 2 2 2 2 ...
